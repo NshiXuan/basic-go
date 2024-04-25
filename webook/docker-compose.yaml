@@ -1,0 +1,21 @@
+version: '3'
+services:
+  mysql8:
+    image: mysql:8.0.29
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      # - 初始化脚本 将当前目录下的 script/mysql 中的 init.sql 脚本映射到 docker-entrypoint-initdb.d 中
+      - ./script/mysql/:/docker-entrypoint-initdb.d/
+    ports:
+      # - 外部访问用 13316
+      - 13316:3306
+  # redis:
+  #   image: "bitnami/redis:latest"
+  #   restart: always
+  #   environment:
+  #     - ALLOW_EMPTY_PASSWORD=yes
+  #   ports:
+  #     - '6379:6379'
