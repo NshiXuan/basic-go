@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -34,8 +34,8 @@ func initWebServer() *gin.Engine {
 	server.Use(cors.New(cors.Config{
 		// AllowOrigins:     []string{"https://localhost:8088"},
 		// AllowMethods:     []string{"PUT", "PATCH"},
-		AllowHeaders: []string{"Origin"},
-		// ExposeHeaders:    []string{"Content-Length"},
+		// AllowHeaders:  []string{"Origin"},
+		AllowHeaders: []string{"Content-Type", "Authorization"},
 		// 是否允许 cookie 之类的东西
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
@@ -49,9 +49,15 @@ func initWebServer() *gin.Engine {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	store := cookie.NewStore([]byte("secret"))
+	// store := cookie.NewStore([]byte("secret"))
+	// store := memstore.NewStore([]byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"), []byte("uX7lE7bW8qM8tE4yN6dR1uD7cA4eD2tW"))
+	// 参数：最大空闲连接数，tcp，连接信息，密码，加密key，key
+	store, err := redis.NewStore(16, "tcp", "localhost:6379", "", []byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"))
+	if err != nil {
+		panic(err)
+	}
 	server.Use(sessions.Sessions("mysession", store))
-	server.Use(middleware.NewLoginMiddlewareBuilder().Build())
+	server.Use(middleware.NewLoginMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
 	return server
 }
 

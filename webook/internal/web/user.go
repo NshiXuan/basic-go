@@ -114,8 +114,25 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	// 设置 session
 	sess := sessions.Default(ctx)
 	sess.Set("userId", u.Id)
+	// Options 用来控制 cookie 的属性
+	sess.Options(sessions.Options{
+		// Secure:   true,
+		// HttpOnly: true,
+		MaxAge: 60,
+	})
 	sess.Save()
 	ctx.String(http.StatusOK, "登录成功")
+}
+
+func (h *UserHandler) Logout(ctx *gin.Context) {
+	// 设置 session
+	sess := sessions.Default(ctx)
+	// Options 用来控制 cookie 的属性
+	sess.Options(sessions.Options{
+		MaxAge: -1, // 如果是 redis ，还可以控制 redis 的 key value 过期时间
+	})
+	sess.Save()
+	ctx.String(http.StatusOK, "退出登录成功")
 }
 
 func (h *UserHandler) Edit(ctx *gin.Context) {
