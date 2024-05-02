@@ -7,22 +7,23 @@ import router from "next/router";
 const onFinish = (values: any) => {
     axios.post("/users/login", values)
         .then((res) => {
-            if(res.status != 200) {
+            if (res.status != 200) {
                 alert(res.statusText);
                 return
             }
-            if(typeof res.data == 'string') {
-                alert(res.data);
-            } else {
-                const msg = res.data?.msg || JSON.stringify(res.data)
-                alert(msg);
-                if(res.data.code == 0) {
-                    router.push('/articles/list')
-                }
-            }
+            // if(typeof res.data == 'string') {
+            //     alert(res.data);
+            // } else {
+            //     const msg = res.data?.msg || JSON.stringify(res.data)
+            //     alert(msg);
+            //     if(res.data.code == 0) {
+            //         router.push('/articles/list')
+            //     }
+            // }
+            router.push('/users/profile')
         }).catch((err) => {
             alert(err);
-    })
+        })
 };
 
 const onFinishFailed = (errorInfo: any) => {
@@ -71,6 +72,7 @@ const LoginForm: React.FC = () => {
             </Link>
         </Form.Item>
     </Form>
-)};
+    )
+};
 
 export default LoginForm;

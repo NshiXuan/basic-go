@@ -36,6 +36,8 @@ func initWebServer() *gin.Engine {
 		// AllowMethods:     []string{"PUT", "PATCH"},
 		// AllowHeaders:  []string{"Origin"},
 		AllowHeaders: []string{"Content-Type", "Authorization"},
+		// 不加 ExposeHeaders ，前端获取不到 token
+		ExposeHeaders: []string{"x-jwt-token"},
 		// 是否允许 cookie 之类的东西
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
@@ -57,7 +59,8 @@ func initWebServer() *gin.Engine {
 		panic(err)
 	}
 	server.Use(sessions.Sessions("mysession", store))
-	server.Use(middleware.NewLoginMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
+	// server.Use(middleware.NewLoginMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
+	server.Use(middleware.NewLoginJWTMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
 	return server
 }
 

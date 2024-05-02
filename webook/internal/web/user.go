@@ -3,10 +3,13 @@ package web
 import (
 	"basic-go/webook/internal/domain"
 	"basic-go/webook/internal/service"
+	"fmt"
 	"net/http"
+	"time"
 
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +40,10 @@ func NewUserHandler(svc service.UserService) *UserHandler {
 func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	ug.POST("/signup", h.SignUp)
-	ug.POST("/login", h.Login)
+	// ug.POST("/login", h.Login)
+	ug.POST("/login", h.LoginJWT)
+	ug.POST("/edit", h.Edit)
+	ug.GET("/profile", h.ProfileJWT)
 }
 
 func (h *UserHandler) SignUp(ctx *gin.Context) {
@@ -93,7 +99,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "注册成功")
 }
 
-func (h *UserHandler) Login(ctx *gin.Context) {
+func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 	type LoginReq struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -109,6 +115,40 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	}
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	// JWT 设置登录态
+	claims := UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+		Uid: u.Id,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	tokenStr, err := token.SignedString([]byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"))
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "系统错误")
+	}
+	ctx.Header("x-jwt-token", tokenStr)
+	ctx.String(http.StatusOK, "登录成功")
+}
+
+func (h *UserHandler) Login(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req LoginReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	u, err := h.svc.Login(ctx, req.Email, req.Password)
+	if err == service.ErrInvalidUserOrEmail {
+		ctx.String(http.StatusOK, "用户名或密码不对")
+		return
+	}
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "系统错误")
 		return
 	}
 	// 设置 session
@@ -137,4 +177,31 @@ func (h *UserHandler) Logout(ctx *gin.Context) {
 
 func (h *UserHandler) Edit(ctx *gin.Context) {
 
+}
+
+func (h *UserHandler) Profile(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "profile")
+}
+
+func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
+	c, ok := ctx.Get("claims")
+	if !ok {
+		// 可以考虑监控这里
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	claims, ok := c.(*UserClaims)
+	if !ok {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	fmt.Printf("claims.Uid: %v\n", claims.Uid)
+}
+
+type UserClaims struct {
+	// jwt.RegisteredClaims 实现了 Claims 接口
+	jwt.RegisteredClaims
+
+	// 自定义的声明字段
+	Uid int64
 }
