@@ -122,7 +122,8 @@ func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
 		},
-		Uid: u.Id,
+		Uid:       u.Id,
+		UserAgent: ctx.Request.UserAgent(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	tokenStr, err := token.SignedString([]byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"))
@@ -195,7 +196,8 @@ func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
-	fmt.Printf("claims.Uid: %v\n", claims.Uid)
+	fmt.Printf("claims: %v\n", claims)
+	ctx.String(http.StatusOK, "profile")
 }
 
 type UserClaims struct {
@@ -203,5 +205,6 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 
 	// 自定义的声明字段
-	Uid int64
+	Uid       int64
+	UserAgent string
 }

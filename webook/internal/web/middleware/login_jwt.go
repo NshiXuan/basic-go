@@ -61,6 +61,16 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
+		// 换设备不会触发下面的判断 触发条件一般是有人复制了 token 到其它端使用,比如: 浏览器的 token 到手机上使用
+		// 用户浏览器升级也会触发
+		if claims.UserAgent != ctx.Request.UserAgent() {
+			log.Println("UserAgent 不一致")
+			// 严重的安全问题
+			// 加监控
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
 		// 刷新登录态
 		now := time.Now()
 		// login 设置的 token 过期实际为 1 min , 所以 < 50 时代表过了 10s
