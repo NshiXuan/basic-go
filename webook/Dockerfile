@@ -5,4 +5,4 @@ COPY webook /app/webook
 WORKDIR /app
 
 # 执行入口
-ENTRYPOINT [ "/app/webook" ]
+ENTRYPOINT ["/app/webook"]

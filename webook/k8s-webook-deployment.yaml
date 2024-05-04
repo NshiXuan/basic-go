@@ -14,10 +14,10 @@ spec:
       labels:
         # 这里的 app 要与 selector 中的一致
         app: webook
-    # POD 的具体信息 
+    # POD 的具体信息
     spec:
       containers:
-      - name: webook
-        image: codersx/webook:v0.0.1
-        ports:
-        # - containerPort: 8080
+        - name: webook
+          image: codersx/webook:v0.0.1
+          ports:
+            - containerPort: 8080
