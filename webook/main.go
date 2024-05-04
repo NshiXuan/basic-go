@@ -6,16 +6,12 @@ import (
 	"basic-go/webook/internal/service"
 	"basic-go/webook/internal/web"
 	"basic-go/webook/internal/web/middleware"
-	"basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -38,10 +34,10 @@ func initWebServer() *gin.Engine {
 		println("第一个 middleware")
 	})
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+	// redisClient := redis.NewClient(&redis.Options{
+	// 	Addr: "localhost:6379",
+	// })
+	// server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
 	server.Use(cors.New(cors.Config{
 		// AllowOrigins:     []string{"https://localhost:8088"},
@@ -64,13 +60,13 @@ func initWebServer() *gin.Engine {
 	}))
 
 	// store := cookie.NewStore([]byte("secret"))
-	store := memstore.NewStore([]byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"), []byte("uX7lE7bW8qM8tE4yN6dR1uD7cA4eD2tW"))
+	// store := memstore.NewStore([]byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"), []byte("uX7lE7bW8qM8tE4yN6dR1uD7cA4eD2tW"))
 	// 参数：最大空闲连接数，tcp，连接信息，密码，加密key，key
 	// store, err := redis.NewStore(16, "tcp", "localhost:6379", "", []byte("cJ5rC2kQ4dF5oN3dH3wG4jT6bO4rU1dS"))
 	// if err != nil {
 	// 	panic(err)
 	// }
-	server.Use(sessions.Sessions("mysession", store))
+	// server.Use(sessions.Sessions("mysession", store))
 	// server.Use(middleware.NewLoginMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
 	server.Use(middleware.NewLoginJWTMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signup").Build())
 	return server
