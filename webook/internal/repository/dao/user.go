@@ -48,6 +48,13 @@ func (dao *UserDao) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
+func (dao *UserDao) FindById(ctx context.Context, id int64) (User, error) {
+	var u User
+	// 不用检查，找不到就返回
+	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
+	return u, err
+}
+
 // User 直接对应数据库表
 // 有些人叫 entity 或 model 或 PO (persistent object)
 type User struct {
