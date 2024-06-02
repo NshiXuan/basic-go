@@ -242,6 +242,7 @@ func (h *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 			Code: 4,
 			Msg:  "输入有误",
 		})
+		return
 	}
 	err := h.codeSvc.Send(ctx, biz, req.Phone)
 	switch err {
@@ -259,6 +260,7 @@ func (h *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 			Msg:  "系统错误",
 		})
 	}
+	return
 }
 
 func (h *UserHandler) Logout(ctx *gin.Context) {
