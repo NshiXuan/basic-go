@@ -64,7 +64,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		// 换设备不会触发下面的判断 触发条件一般是有人复制了 token 到其它端使用,比如: 浏览器的 token 到手机上使用
 		// 用户浏览器升级也会触发
 		if claims.UserAgent != ctx.Request.UserAgent() {
-			log.Println("UserAgent 不一致")
+			log.Printf("UserAgent 不一致, claims.UserAgent: %s, ctx.Request.UserAgent:%s\n", claims.UserAgent, ctx.Request.UserAgent())
 			// 严重的安全问题
 			// 加监控
 			ctx.AbortWithStatus(http.StatusUnauthorized)

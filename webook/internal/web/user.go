@@ -185,6 +185,7 @@ func (h *UserHandler) Profile(ctx *gin.Context) {
 }
 
 func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
+	fmt.Printf("\"profile\": %v\n", "profile")
 	c, ok := ctx.Get("claims")
 	if !ok {
 		// 可以考虑监控这里
@@ -196,8 +197,12 @@ func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
-	fmt.Printf("claims: %v\n", claims)
-	ctx.String(http.StatusOK, "profile")
+	u, err := h.svc.Profile(ctx, claims.Uid)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	ctx.String(http.StatusOK, u.Email)
 }
 
 type UserClaims struct {

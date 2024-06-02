@@ -59,3 +59,10 @@ type User struct {
 	Ctime int64
 	Utime int64
 }
+
+func (dao *UserDao) FindById(ctx context.Context, id int64) (User, error) {
+	var u User
+	// 不用检查，找不到就返回
+	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
+	return u, err
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"basic-go/webook/internal/repository"
+	"basic-go/webook/internal/repository/cache"
 	"basic-go/webook/internal/repository/dao"
 	"basic-go/webook/internal/service"
 	"basic-go/webook/internal/web"
@@ -21,27 +22,21 @@ import (
 )
 
 func main() {
-	// db := initDB()
-	// server := initWebServer()
-	// u := initUser(db)
-	// u.RegisterRoutes(server)
-	server := gin.Default()
-	server.GET("/hello", func(ctx *gin.Context) {
-		ctx.String(200, "hello")
-	})
+	db := initDB()
+	rdb := initRedisDB()
+	server := initWebServer(rdb)
+	u := initUser(db, rdb)
+	u.RegisterRoutes(server)
 	server.Run(":8080")
 }
 
-func initWebServer() *gin.Engine {
+func initWebServer(rdb redis.Cmdable) *gin.Engine {
 	server := gin.Default()
 	server.Use(func(ctx *gin.Context) {
 		println("第一个 middleware")
 	})
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+	server.Use(ratelimit.NewBuilder(rdb, time.Second, 100).Build())
 
 	server.Use(cors.New(cors.Config{
 		// AllowOrigins:     []string{"https://localhost:8088"},
@@ -87,9 +82,17 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
+func initRedisDB() redis.Cmdable {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	return redisClient
+}
+
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	ud := dao.NewUserDao(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(rdb)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
 	u := web.NewUserHandler(svc)
 	return u
