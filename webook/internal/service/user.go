@@ -18,8 +18,8 @@ type UserService struct {
 	repo *repository.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository) UserService {
-	return UserService{
+func NewUserService(repo *repository.UserRepository) *UserService {
+	return &UserService{
 		repo: repo,
 	}
 }
@@ -53,4 +53,24 @@ func (svc *UserService) Login(ctx context.Context, email, password string) (doma
 func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
 	u, err := svc.repo.FindById(ctx, id)
 	return u, err
+}
+
+func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+	// 快路径
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		// nil 与不为 ErrUserNotFound 都会进来这里
+		return u, err
+	}
+	// 明确知道没有这个用户
+	u = domain.User{
+		Phone: phone,
+	}
+	// 慢路径，一旦触发降级，就不要走慢路径（也就是不能创建了）
+	// u 是没有 id 的
+	err = svc.repo.Create(ctx, u)
+	if err != nil && err != repository.ErrUserDuplicateEmail {
+		return u, err
+	}
+	return svc.repo.FindByPhone(ctx, phone)
 }
