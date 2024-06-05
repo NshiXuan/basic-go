@@ -260,7 +260,6 @@ func (h *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 			Msg:  "系统错误",
 		})
 	}
-	return
 }
 
 func (h *UserHandler) Logout(ctx *gin.Context) {
