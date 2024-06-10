@@ -16,19 +16,24 @@ var (
 	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
 )
 
-type CoderService struct {
-	repo   *repository.CodeRepository
+type CodeService interface {
+	Send(ctx context.Context, biz string, phone string) error
+	Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error)
+}
+
+type codeService struct {
+	repo   repository.CodeRepository
 	smsSvc sms.Service
 }
 
-func NewCoderService(repo *repository.CodeRepository, smsSvc sms.Service) *CoderService {
-	return &CoderService{
+func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+	return &codeService{
 		repo:   repo,
 		smsSvc: smsSvc,
 	}
 }
 
-func (svc *CoderService) Send(ctx context.Context, biz string, phone string) error {
+func (svc *codeService) Send(ctx context.Context, biz string, phone string) error {
 	// 生成验证码
 	code := svc.generateCode()
 	// 塞进 redis
@@ -47,15 +52,15 @@ func (svc *CoderService) Send(ctx context.Context, biz string, phone string) err
 }
 
 // Verify 与 VerifyV1 两种返回值都可以
-func (svc *CoderService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
+func (svc *codeService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 }
 
-// func (c *CoderService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
+// func (c *codeService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
 //  return nil
 // }
 
-func (svc *CoderService) generateCode() string {
+func (svc *codeService) generateCode() string {
 	// 生成包含   0 ~ 999999 的随机数
 	// 不够 6 为, %6d 会补上前导 0
 	num := rand.Intn(1000000)

@@ -28,11 +28,11 @@ func InitWebServer() *gin.Engine {
 		cache.NewCodeCache,
 
 		// 初始化业务
-		repository.NewUserRepository,
+		repository.NewCacheUserRepository,
 		repository.NewCodeRepository,
 
 		service.NewUserService,
-		service.NewCoderService,
+		service.NewCodeService,
 		ioc.InitSMSService,
 
 		// 初始化 handler
@@ -41,7 +41,7 @@ func InitWebServer() *gin.Engine {
 		// 中间件、注册路由呢？
 		// gin.Default,
 		ioc.InitGin,
-		ioc.InitMiddlewares,
+		ioc.InitGinMiddlewares,
 	)
 	return new(gin.Engine)
 }
