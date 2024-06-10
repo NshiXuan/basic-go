@@ -18,16 +18,16 @@ import (
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func main() {
-	db := initDB()
-	rdb := initRedisDB()
-	server := initWebServer(rdb)
-	u := initUser(db, rdb)
-	u.RegisterRoutes(server)
+	// db := initDB()
+	// rdb := initRedisDB()
+	// server := initWebServer(rdb)
+	// u := initUser(db, rdb)
+	// u.RegisterRoutes(server)
+	server := InitWebServer()
 	server.Run(":8080")
 }
 
@@ -74,24 +74,6 @@ func initWebServer(rdb redis.Cmdable) *gin.Engine {
 		IgnorePaths("/users/login_sms/code/send").
 		Build())
 	return server
-}
-
-func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
-	if err != nil {
-		panic(err)
-	}
-	if err := dao.InitTable(db); err != nil {
-		panic(err)
-	}
-	return db
-}
-
-func initRedisDB() redis.Cmdable {
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	return redisClient
 }
 
 func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
