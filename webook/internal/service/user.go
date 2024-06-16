@@ -58,6 +58,7 @@ func (svc *userService) Login(ctx context.Context, email, password string) (doma
 }
 
 func (svc *userService) Profile(ctx context.Context, id int64) (domain.User, error) {
+	// 在系统内部 基本上都是使用 ID
 	u, err := svc.repo.FindById(ctx, id)
 	return u, err
 }

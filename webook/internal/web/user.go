@@ -3,7 +3,6 @@ package web
 import (
 	"basic-go/webook/internal/domain"
 	"basic-go/webook/internal/service"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -278,11 +277,29 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 }
 
 func (h *UserHandler) Profile(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "profile")
+	type Profile struct {
+		Email string
+	}
+	sess := sessions.Default(ctx)
+	id := sess.Get("userId").(int64)
+	u, err := h.svc.Profile(ctx, id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	ctx.JSON(http.StatusOK, Profile{
+		Email: u.Email,
+	})
 }
 
 func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
-	fmt.Printf("\"profile\": %v\n", "profile")
+	type Profile struct {
+		Email    string
+		Phone    string
+		Nickname string
+		Birthday string
+		AboutMe  string
+	}
 	c, ok := ctx.Get("claims")
 	if !ok {
 		// 可以考虑监控这里
@@ -299,7 +316,13 @@ func (h *UserHandler) ProfileJWT(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
-	ctx.String(http.StatusOK, u.Email)
+	ctx.JSON(http.StatusOK, Profile{
+		Email:    u.Email,
+		Phone:    u.Phone,
+		Nickname: u.Nickname,
+		Birthday: u.Birthday.Format(time.DateOnly),
+		AboutMe:  u.AboutMe,
+	})
 }
 
 type UserClaims struct {
