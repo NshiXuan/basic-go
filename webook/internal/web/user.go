@@ -3,7 +3,6 @@ package web
 import (
 	"basic-go/webook/internal/domain"
 	"basic-go/webook/internal/service"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -62,7 +61,6 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	fmt.Printf("req: %v\n", req)
 
 	isEmail, err := h.emailRexExp.MatchString(req.Email)
 	if err != nil {

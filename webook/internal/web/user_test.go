@@ -58,6 +58,105 @@ func TestUserHandlerSignUp(t *testing.T) {
 			wantCode: http.StatusOK,
 			wantBody: "注册成功",
 		},
+		{
+			name: "参数不对，Bind失败",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				return usersvc
+			},
+			reqBody: `
+	"email": "123@qq.com",
+	"password": "hello#world123"
+`,
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name: "邮箱格式不对",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				return usersvc
+			},
+			reqBody: `
+	{
+	"email": "123@q",
+	"password": "hello#world123"
+	}
+`,
+			wantCode: http.StatusOK,
+			wantBody: "非法邮箱格式",
+		},
+		{
+			name: "两次输入密码不匹配",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				return usersvc
+			},
+			reqBody: `
+{
+	"email": "123@qq.com",
+	"password": "hello#world1234",
+	"confirmPassword": "hello#world123"
+}
+`,
+			wantCode: http.StatusOK,
+			wantBody: "两次输入密码不对",
+		},
+		{
+			name: "密码格式不对",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				return usersvc
+			},
+			reqBody: `
+{
+	"email": "123@qq.com",
+	"password": "hello123",
+	"confirmPassword": "hello123"
+}
+`,
+			wantCode: http.StatusOK,
+			wantBody: "密码必须包含字母、数字、特殊字符，并且不少于八位",
+		},
+		{
+			name: "邮箱冲突",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				usersvc.EXPECT().SignUp(gomock.Any(), domain.User{
+					Email:    "123@qq.com",
+					Password: "hello#world123",
+				}).Return(service.ErrUserDuplicateEmail)
+				return usersvc
+			},
+			reqBody: `
+{
+	"email": "123@qq.com",
+	"password": "hello#world123",
+	"confirmPassword": "hello#world123"
+}
+`,
+			wantCode: http.StatusOK,
+			wantBody: "邮箱冲突",
+		},
+		{
+			name: "系统错误",
+			mock: func(ctrl *gomock.Controller) service.UserService {
+				usersvc := svcmocks.NewMockUserService(ctrl)
+				usersvc.EXPECT().SignUp(gomock.Any(), domain.User{
+					Email:    "123@qq.com",
+					Password: "hello#world123",
+				}).Return(errors.New("随便一个error"))
+				return usersvc
+			},
+			reqBody: `
+{
+	"email": "123@qq.com",
+	"password": "hello#world123",
+	"confirmPassword": "hello#world123"
+}
+`,
+			wantCode: http.StatusOK,
+			wantBody: "系统错误",
+		},
 	}
 
 	for _, tc := range testCases {
