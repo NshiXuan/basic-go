@@ -30,6 +30,25 @@ func TestEncrypt(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestMock(t *testing.T) {
+	// 1.初始化控制器
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	usersvc := svcmocks.NewMockUserService(ctrl)
+
+	// 2.EXPECT 设置预期调用, 预期参数与预期返回值
+	// gomock.Any() 表示随便传递什么参数
+	usersvc.EXPECT().SignUp(gomock.Any(), gomock.Any()).Return(errors.New("mock error"))
+
+	// 3.发起调用, 参数要与上面预期的参数一致，不然报错
+	// 且调用次数要与预期的此时一致，不然报错
+	// 返回值为预期的返回值 mock error
+	err := usersvc.SignUp(context.Background(), domain.User{
+		Email: "123@qq.com",
+	})
+	t.Log(err)
+}
+
 func TestUserHandlerSignUp(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -182,23 +201,4 @@ func TestUserHandlerSignUp(t *testing.T) {
 			assert.Equal(t, tc.wantBody, resp.Body.String())
 		})
 	}
-}
-
-func TestMock(t *testing.T) {
-	// 1.初始化控制器
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	usersvc := svcmocks.NewMockUserService(ctrl)
-
-	// 2.EXPECT 设置预期调用, 预期参数与预期返回值
-	// gomock.Any() 表示随便传递什么参数
-	usersvc.EXPECT().SignUp(gomock.Any(), gomock.Any()).Return(errors.New("mock error"))
-
-	// 3.发起调用, 参数要与上面预期的参数一致，不然报错
-	// 且调用次数要与预期的此时一致，不然报错
-	// 返回值为预期的返回值 mock error
-	err := usersvc.SignUp(context.Background(), domain.User{
-		Email: "123@qq.com",
-	})
-	t.Log(err)
 }
