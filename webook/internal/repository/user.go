@@ -26,7 +26,7 @@ type CachedUserRepository struct {
 	cache cache.UserCache
 }
 
-func NewCacheUserRepository(dao dao.UserDao, c cache.UserCache) UserRepository {
+func NewUserRepository(dao dao.UserDao, c cache.UserCache) UserRepository {
 	return &CachedUserRepository{
 		dao:   dao,
 		cache: c,
@@ -82,11 +82,7 @@ func (r *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.U
 		return domain.User{}, err
 	}
 
-	u = domain.User{
-		Id:       ue.Id,
-		Email:    ue.Email.String,
-		Password: ue.Password,
-	}
+	u = r.entityToDomain(ue)
 	go func() {
 		err = r.cache.Set(ctx, u)
 		if err != nil {
